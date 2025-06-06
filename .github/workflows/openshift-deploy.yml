@@ -1,0 +1,29 @@
+name: Deploy to OpenShift
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install OpenShift CLI (oc)
+      run: |
+        curl -LO "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz"
+        tar -xvf openshift-client-linux.tar.gz
+        sudo mv oc kubectl /usr/local/bin/
+
+    - name: Login to OpenShift
+      run: oc login "$OPENSHIFT_SERVER" --token="$OPENSHIFT_TOKEN" --insecure-skip-tls-verify=true
+
+    - name: Apply OpenShift Manifests
+      run: |
+        oc apply -f mysql-deployment.yaml
+        oc apply -f quotes-deployment.yaml
+        oc apply -f quotesweb-deployment.yaml
